@@ -1,3 +1,4 @@
 adb-keys/
 __pycache__/
 *.pyc
+.env
