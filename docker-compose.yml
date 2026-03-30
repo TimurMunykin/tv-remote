@@ -7,3 +7,4 @@ services:
       - "8099:8080"
     volumes:
       - ./adb-keys:/root/.android:ro
+      - ./static:/app/static
