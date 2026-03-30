@@ -10,9 +10,12 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__)
 
-TV_IP = "192.168.31.194"
+TV_IP = os.environ.get("TV_IP", "192.168.31.194")
 TV_API = f"https://{TV_IP}:1926/6"
-AUTH = HTTPDigestAuth("claude01", "2ace7b0ad9884c8dce777c6e7f5dcfd6ddfcb6bb10223037b9d56c8f8402564d")
+AUTH = HTTPDigestAuth(
+    os.environ.get("TV_AUTH_USER", "claude01"),
+    os.environ.get("TV_AUTH_KEY", "")
+)
 TIMEOUT = 5
 
 
