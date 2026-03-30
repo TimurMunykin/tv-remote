@@ -1,10 +1,39 @@
 services:
-  tv-remote:
+  backend:
     build: .
-    container_name: tv-remote
+    container_name: tv-remote-backend
     restart: unless-stopped
-    ports:
-      - "8099:8080"
+    env_file: .env
     volumes:
       - ./adb-keys:/root/.android:ro
-      - ./static:/app/static
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    container_name: tv-remote-frontend
+    restart: unless-stopped
+    ports:
+      - "8099:80"
+    depends_on:
+      - backend
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: tv-remote-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tvremote
+      POSTGRES_USER: tvremote
+      POSTGRES_PASSWORD: tvremote
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tvremote"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
