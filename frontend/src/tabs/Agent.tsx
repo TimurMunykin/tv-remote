@@ -11,7 +11,7 @@ type LogItem =
 function toolLabel(tool: string, args: Record<string, unknown>): string {
   switch (tool) {
     case 'take_screenshot': return '📷 Taking screenshot'
-    case 'press_key': return `⌨ Press ${args.key}${args.times && args.times > 1 ? ` ×${args.times}` : ''}`
+    case 'press_key': return `⌨ Press ${args.key}${args.times && (args.times as number) > 1 ? ` ×${args.times}` : ''}`
     case 'launch_app': return `▶ Launch ${args.package_name ?? ''}`
     case 'get_apps': return '📋 Getting app list'
     case 'type_text': return `✍ Type "${args.text}"`
