@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add GPT-4.5-preview AI agent that controls the TV via natural language chat, with React frontend (tabs: Remote / AI Agent), Postgres for history, and .env for all secrets.
+**Goal:** Add GPT-5.4 AI agent that controls the TV via natural language chat, with React frontend (tabs: Remote / AI Agent), Postgres for history, and .env for all secrets.
 
 **Architecture:** Flask backend adds SSE `/api/chat` endpoint running an OpenAI tool-calling loop with TV control tools (screenshot, keypresses, app launch). React+Vite frontend served by nginx which also proxies `/api/` to Flask. Postgres stores chat history.
 
@@ -42,7 +42,7 @@
 
 ```
 OPENAI_API_KEY=
-OPENAI_MODEL=gpt-4.5-preview
+OPENAI_MODEL=gpt-5.4
 TV_IP=192.168.31.194
 TV_AUTH_USER=claude01
 TV_AUTH_KEY=
@@ -53,7 +53,7 @@ DATABASE_URL=postgresql://tvremote:tvremote@postgres:5432/tvremote
 
 ```
 OPENAI_API_KEY=<your key here>
-OPENAI_MODEL=gpt-4.5-preview
+OPENAI_MODEL=gpt-5.4
 TV_IP=192.168.31.194
 TV_AUTH_USER=claude01
 TV_AUTH_KEY=2ace7b0ad9884c8dce777c6e7f5dcfd6ddfcb6bb10223037b9d56c8f8402564d
@@ -370,7 +370,7 @@ def run_agent_loop(user_message: str) -> Generator[dict, None, None]:
         messages.append({"role": msg["role"], "content": msg["content"]})
 
     client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-    model = os.environ.get("OPENAI_MODEL", "gpt-4.5-preview")
+    model = os.environ.get("OPENAI_MODEL", "gpt-5.4")
     tv_ip = os.environ.get("TV_IP", "192.168.31.194")
 
     for _ in range(20):
