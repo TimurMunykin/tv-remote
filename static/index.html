@@ -117,6 +117,17 @@
 </div>
 
 <div class="card">
+  <div class="card-title">Скриншот</div>
+  <div style="text-align:center;">
+    <button class="app-btn" onclick="takeScreenshot()" style="width:100%;padding:14px;font-size:1em;">📷 Сделать скриншот</button>
+  </div>
+  <div id="screenshotWrap" style="margin-top:12px;display:none;">
+    <img id="screenshotImg" style="width:100%;border-radius:8px;cursor:zoom-in;" onclick="openLightbox(this.src)" />
+  </div>
+  <div id="gallery" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;"></div>
+</div>
+
+<div class="card">
   <div class="card-title">Apps</div>
   <div class="apps-grid" id="appsGrid">
     <button class="app-btn" onclick="launchApp('com.google.android.youtube.tv','com.google.android.apps.youtube.tv.activity.ShellActivity')">YouTube</button>
@@ -129,6 +140,11 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- Lightbox -->
+<div id="lightbox" onclick="closeLightbox()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:1000;align-items:center;justify-content:center;cursor:zoom-out;">
+  <img id="lightboxImg" style="max-width:95vw;max-height:95vh;border-radius:8px;box-shadow:0 0 40px #000;" />
+</div>
 
 <script>
 const API = '';
@@ -194,6 +210,43 @@ async function loadApps() {
     grid.appendChild(btn);
   });
 }
+
+async function takeScreenshot() {
+  toast('Снимаю...');
+  const wrap = document.getElementById('screenshotWrap');
+  const img = document.getElementById('screenshotImg');
+  wrap.style.display = 'block';
+  const src = '/api/screenshot?' + Date.now();
+  img.src = src;
+  img.onload = () => {
+    toast('Готово!');
+    addToGallery(src);
+  };
+  img.onerror = () => toast('Ошибка');
+}
+
+function addToGallery(src) {
+  const gallery = document.getElementById('gallery');
+  const thumb = document.createElement('img');
+  thumb.src = src;
+  thumb.style.cssText = 'width:calc(33% - 4px);border-radius:6px;cursor:zoom-in;flex-shrink:0;';
+  thumb.onclick = () => openLightbox(src);
+  gallery.insertBefore(thumb, gallery.firstChild);
+  // Keep max 12 thumbnails
+  while (gallery.children.length > 12) gallery.removeChild(gallery.lastChild);
+}
+
+function openLightbox(src) {
+  const lb = document.getElementById('lightbox');
+  document.getElementById('lightboxImg').src = src;
+  lb.style.display = 'flex';
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').style.display = 'none';
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
 
 async function refreshStatus() {
   const data = await api('/api/status');

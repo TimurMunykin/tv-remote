@@ -2,6 +2,9 @@ from flask import Flask, jsonify, request, send_file
 import requests
 from requests.auth import HTTPDigestAuth
 import urllib3
+import subprocess
+import tempfile
+import os
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -87,6 +90,20 @@ def ambilight_power():
 @app.route("/api/ambilight/config")
 def ambilight_config():
     return jsonify(tv_get("ambilight/currentconfiguration"))
+
+
+@app.route("/api/screenshot")
+def screenshot():
+    try:
+        subprocess.run(["adb", "connect", f"{TV_IP}:5555"], capture_output=True, timeout=5)
+        subprocess.run(["adb", "-s", f"{TV_IP}:5555", "shell", "screencap", "-p", "/sdcard/screen.png"],
+                       capture_output=True, timeout=10)
+        tmp = tempfile.mktemp(suffix=".png")
+        subprocess.run(["adb", "-s", f"{TV_IP}:5555", "pull", "/sdcard/screen.png", tmp],
+                       capture_output=True, timeout=10)
+        return send_file(tmp, mimetype="image/png")
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
