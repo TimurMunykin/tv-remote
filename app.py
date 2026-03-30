@@ -1,14 +1,23 @@
-from flask import Flask, jsonify, request, send_file
+import json
+from flask import Flask, jsonify, request, send_file, Response, stream_with_context
 import requests
 from requests.auth import HTTPDigestAuth
 import urllib3
 import subprocess
 import tempfile
 import os
+from db import init_db, get_history, clear_history
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__)
+
+# Initialize DB on startup
+if os.environ.get("DATABASE_URL"):
+    try:
+        init_db()
+    except Exception as e:
+        print(f"DB init skipped: {e}")
 
 TV_IP = os.environ.get("TV_IP", "192.168.31.194")
 TV_API = f"https://{TV_IP}:1926/6"
@@ -107,6 +116,43 @@ def screenshot():
         return send_file(tmp, mimetype="image/png")
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/chat", methods=["POST"])
+def chat():
+    message = (request.json or {}).get("message", "").strip()
+    if not message:
+        return jsonify({"error": "empty message"}), 400
+
+    from agent import run_agent_loop
+
+    def generate():
+        try:
+            for event in run_agent_loop(message):
+                yield f"data: {json.dumps(event)}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'text': str(e)})}\n\n"
+            yield f"data: {json.dumps({'type': 'done'})}\n\n"
+
+    return Response(
+        stream_with_context(generate()),
+        mimetype="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
+    )
+
+
+@app.route("/api/chat/history")
+def chat_history():
+    if not os.environ.get("DATABASE_URL"):
+        return jsonify([])
+    return jsonify(get_history())
+
+
+@app.route("/api/chat/clear", methods=["POST"])
+def chat_clear():
+    if os.environ.get("DATABASE_URL"):
+        clear_history()
+    return jsonify({"ok": True})
 
 
 if __name__ == "__main__":
