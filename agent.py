@@ -170,7 +170,7 @@ def run_agent_loop(user_message: str) -> Generator[dict, None, None]:
             messages=messages,
             tools=TOOLS,
             tool_choice="auto",
-            max_tokens=2000
+            max_completion_tokens=2000
         )
 
         msg = response.choices[0].message
