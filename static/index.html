@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TV Remote</title>
+<style>
+  :root { --bg: #1a1a2e; --card: #16213e; --accent: #e94560; --text: #eee; --dim: #888; --btn: #0f3460; --btn-hover: #1a4a8a; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 16px; }
+  h1 { font-size: 1.3em; margin-bottom: 12px; color: var(--dim); }
+  .status-bar { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; font-size: 0.85em; color: var(--dim); }
+  .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #555; }
+  .status-dot.on { background: #4caf50; }
+  .card { background: var(--card); border-radius: 16px; padding: 20px; margin-bottom: 16px; width: 100%; max-width: 360px; }
+  .card-title { font-size: 0.8em; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+
+  /* Power */
+  .power-row { display: flex; gap: 10px; justify-content: center; }
+  .power-btn { width: 64px; height: 64px; border-radius: 50%; border: 2px solid var(--accent); background: transparent; color: var(--accent); font-size: 1.5em; cursor: pointer; transition: all .2s; }
+  .power-btn:active { background: var(--accent); color: #fff; }
+
+  /* D-pad */
+  .dpad { display: grid; grid-template-columns: 64px 64px 64px; grid-template-rows: 64px 64px 64px; gap: 4px; justify-content: center; }
+  .dpad button { border: none; background: var(--btn); color: var(--text); border-radius: 12px; font-size: 1.3em; cursor: pointer; transition: background .15s; display: flex; align-items: center; justify-content: center; }
+  .dpad button:active { background: var(--accent); }
+  .dpad .center { border-radius: 50%; background: var(--accent); font-size: 0.85em; font-weight: bold; }
+
+  /* Volume */
+  .vol-row { display: flex; align-items: center; gap: 12px; justify-content: center; }
+  .vol-row button { width: 52px; height: 52px; border-radius: 50%; border: none; background: var(--btn); color: var(--text); font-size: 1.4em; cursor: pointer; }
+  .vol-row button:active { background: var(--btn-hover); }
+  .vol-value { font-size: 1.2em; min-width: 40px; text-align: center; }
+  .mute-btn { background: transparent !important; border: 1px solid var(--dim) !important; font-size: 1em !important; color: var(--dim); }
+  .mute-btn.muted { border-color: var(--accent) !important; color: var(--accent); }
+
+  /* Apps */
+  .apps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .app-btn { padding: 12px 8px; border: none; background: var(--btn); color: var(--text); border-radius: 10px; font-size: 0.8em; cursor: pointer; text-align: center; word-break: break-word; }
+  .app-btn:active { background: var(--accent); }
+
+  /* Media */
+  .media-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .media-row button { width: 52px; height: 44px; border: none; background: var(--btn); color: var(--text); border-radius: 10px; font-size: 1.1em; cursor: pointer; }
+  .media-row button:active { background: var(--btn-hover); }
+
+  /* Extra keys */
+  .extra-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .extra-row button { padding: 10px 16px; border: none; background: var(--btn); color: var(--text); border-radius: 10px; font-size: 0.8em; cursor: pointer; }
+  .extra-row button:active { background: var(--btn-hover); }
+
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 8px 20px; border-radius: 20px; font-size: 0.85em; opacity: 0; transition: opacity .3s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<h1>Philips 55OLED706</h1>
+
+<div class="status-bar">
+  <div class="status-dot" id="statusDot"></div>
+  <span id="statusText">...</span>
+</div>
+
+<div class="card">
+  <div class="card-title">Power</div>
+  <div class="power-row">
+    <button class="power-btn" onclick="sendPower('On')" title="On">&#x23FB;</button>
+    <button class="power-btn" onclick="sendPower('Standby')" title="Standby" style="border-color:#555;color:#555;">&#x23FB;</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Navigation</div>
+  <div class="dpad">
+    <div></div>
+    <button onclick="sendKey('CursorUp')">&#x25B2;</button>
+    <div></div>
+    <button onclick="sendKey('CursorLeft')">&#x25C0;</button>
+    <button class="center" onclick="sendKey('Confirm')">OK</button>
+    <button onclick="sendKey('CursorRight')">&#x25B6;</button>
+    <div></div>
+    <button onclick="sendKey('CursorDown')">&#x25BC;</button>
+    <div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Volume</div>
+  <div class="vol-row">
+    <button onclick="changeVol(-3)">−</button>
+    <span class="vol-value" id="volValue">--</span>
+    <button onclick="changeVol(3)">+</button>
+    <button class="mute-btn" id="muteBtn" onclick="toggleMute()">&#x1F507;</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Media</div>
+  <div class="media-row">
+    <button onclick="sendKey('Rewind')" title="Rewind">&#x23EA;</button>
+    <button onclick="sendKey('Play')" title="Play">&#x25B6;</button>
+    <button onclick="sendKey('Pause')" title="Pause">&#x23F8;</button>
+    <button onclick="sendKey('Stop')" title="Stop">&#x23F9;</button>
+    <button onclick="sendKey('FastForward')" title="FF">&#x23E9;</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Extra</div>
+  <div class="extra-row">
+    <button onclick="sendKey('Back')">&#x2190; Back</button>
+    <button onclick="sendKey('Home')">&#x2302; Home</button>
+    <button onclick="sendKey('Options')">&#x2630; Menu</button>
+    <button onclick="sendKey('Find')">&#x1F50D;</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">Apps</div>
+  <div class="apps-grid" id="appsGrid">
+    <button class="app-btn" onclick="launchApp('com.google.android.youtube.tv','com.google.android.apps.youtube.tv.activity.ShellActivity')">YouTube</button>
+    <button class="app-btn" onclick="launchApp('com.netflix.ninja','com.netflix.ninja.MainActivity')">Netflix</button>
+    <button class="app-btn" onclick="launchApp('org.AV.KinoGo.BETA','org.AV.KinoGo.BETA.MainActivity')">KinoGo</button>
+  </div>
+  <div style="margin-top:10px; text-align:center;">
+    <button class="app-btn" onclick="loadApps()" style="width:100%;">Загрузить все приложения...</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+let currentVol = 0;
+let isMuted = false;
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1200);
+}
+
+async function api(path, opts) {
+  try {
+    const r = await fetch(API + path, opts);
+    return await r.json();
+  } catch(e) {
+    toast('Error: ' + e.message);
+    return null;
+  }
+}
+
+async function sendKey(key) {
+  toast(key);
+  await api('/api/key', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({key}) });
+}
+
+async function sendPower(state) {
+  toast('Power ' + state);
+  await api('/api/power', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({state}) });
+  setTimeout(refreshStatus, 2000);
+}
+
+async function changeVol(delta) {
+  currentVol = Math.max(0, Math.min(60, currentVol + delta));
+  document.getElementById('volValue').textContent = currentVol;
+  await api('/api/volume', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({volume: currentVol}) });
+}
+
+async function toggleMute() {
+  isMuted = !isMuted;
+  document.getElementById('muteBtn').classList.toggle('muted', isMuted);
+  await api('/api/volume', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({muted: isMuted}) });
+}
+
+async function launchApp(pkg, cls) {
+  toast('Launching...');
+  await api('/api/launch', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({intent:{component:{packageName:pkg, className:cls}, action:'android.intent.action.MAIN'}}) });
+}
+
+async function loadApps() {
+  const data = await api('/api/apps');
+  if (!data || !data.applications) return;
+  const grid = document.getElementById('appsGrid');
+  grid.innerHTML = '';
+  data.applications.sort((a,b) => a.label.localeCompare(b.label)).forEach(app => {
+    const btn = document.createElement('button');
+    btn.className = 'app-btn';
+    btn.textContent = app.label;
+    const c = app.intent.component;
+    btn.onclick = () => launchApp(c.packageName, c.className);
+    grid.appendChild(btn);
+  });
+}
+
+async function refreshStatus() {
+  const data = await api('/api/status');
+  if (!data) return;
+  const dot = document.getElementById('statusDot');
+  const txt = document.getElementById('statusText');
+  const isOn = data.power?.powerstate === 'On';
+  dot.classList.toggle('on', isOn);
+  txt.textContent = isOn ? 'On' : 'Standby';
+  if (data.volume?.current !== undefined) {
+    currentVol = data.volume.current;
+    document.getElementById('volValue').textContent = currentVol;
+    isMuted = data.volume.muted || false;
+    document.getElementById('muteBtn').classList.toggle('muted', isMuted);
+  }
+}
+
+refreshStatus();
+setInterval(refreshStatus, 10000);
+</script>
+</body>
+</html>
